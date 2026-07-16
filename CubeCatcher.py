@@ -36,85 +36,58 @@ clock = pygame.time.Clock()
 font = pygame.font.SysFont(None, 48)
 
 
-# ---------------- მოთამაშის კლასი ----------------
 class Player:
-
     # ეს მუშაობს მაშინ, როცა მოთამაშეს ვქმნით
     def __init__(self):
-
         # მოთამაშის ზომა
         self.width = 90
         self.height = 30
-
         # მოთამაშის საწყისი ადგილი
         self.x = WIDTH / 2 - self.width / 2
         self.y = HEIGHT - self.height - 20
-
         # რამდენად სწრაფად მოძრაობს
         self.speed = 400
-
         # მოთამაშეს შემთხვევით ვაძლევთ ფერს
         self.color = random.choice(list(COLORS.keys()))
 
-
     # მოთამაშის მოძრაობა
     def move(self, dt):
-
         # ვამოწმებთ რომელი ღილაკი არის დაჭერილი
         keys = pygame.key.get_pressed()
-
         # თუ A-ს დავაჭერთ, მარცხნივ წავა
         if keys[pygame.K_a]:
             self.x -= self.speed * dt
-
         # თუ D-ს დავაჭერთ, მარჯვნივ წავა
         if keys[pygame.K_d]:
             self.x += self.speed * dt
-
-
         # არ მივცეთ საშუალება ეკრანიდან გავიდეს
         self.x = max(0, min(self.x, WIDTH - self.width))
-
-
     # ქმნის მართკუთხედს შეჯახების შესამოწმებლად
     def rect(self):
         return pygame.Rect(int(self.x), int(self.y), self.width, self.height)
-
-
     # ხატავს მოთამაშეს ეკრანზე
     def draw(self):
         pygame.draw.rect(screen, COLORS[self.color], self.rect())
 
 
 
-# ---------------- კუბის კლასი ----------------
 class Cube:
-
     # როცა ახალ კუბს ვქმნით
     def __init__(self):
-
         # კუბის ზომა
         self.size = 30
-
         # შემთხვევითი ადგილი ზემოდან
         self.x = random.randint(0, WIDTH - self.size)
-
         # იწყებს ეკრანის ზემოდან
         self.y = -self.size
-
         # შემთხვევითი სიჩქარე
         self.speed = random.randint(180, 300)
-
         # კუბს ვაძლევთ შემთხვევით ფერს
         self.color = random.choice(list(COLORS.keys()))
-
-
     # კუბის ჩამოვარდნა
     def fall(self, dt):
-
         # კუბი ქვემოთ მოძრაობს
         self.y += self.speed * dt
-
 
     # კუბის ადგილი შეჯახებისთვის
     def rect(self):
