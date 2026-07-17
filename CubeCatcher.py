@@ -107,7 +107,7 @@ player = Player()
 
 # აქ შევინახავთ ყველა კუბს
 cubes = []
-
+# tito cubes damatebaze emateba cube1 cube2 cube3 da ase shemdeg
 # ქულა თავიდან არის 0
 score = 0
 
@@ -202,8 +202,12 @@ while running:
 
 
 
-        # თუ კუბი ეკრანს გასცდა
+             # თუ კუბი ეკრანს გასცდა
         if cube.y > HEIGHT:
+
+            # თუ ეს იყო ის ფერი, რომელიც უნდა დაგეჭირა
+            if cube.color == player.color:
+                score -= 1
 
             # ვშლით
             cubes.remove(cube)
