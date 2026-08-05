@@ -1,250 +1,410 @@
 import random
 import sys
 import pygame
+import datetime
+import json
+import os
 
-# ვრთავთ pygame-ს
 pygame.init()
 
-# თამაშის ზომები
-WIDTH, HEIGHT = 800, 600
+WIDTH,HEIGHT=800,600
+FPS=60
+BG_COLOR=(20,20,20)
 
-# რამდენი კადრი იქნება წამში
-FPS = 60
-
-# ფონის ფერი
-BG_COLOR = (20, 20, 20)
-
-# ფერების სია
-COLORS = {
-    "RED": (220, 60, 60),
-    "BLUE": (60, 110, 220),
-    "GREEN": (60, 200, 100),
-    "YELLOW": (230, 210, 60),
-    "PURPLE": (170, 70, 200),
+COLORS={
+"RED":(220,60,60),
+"BLUE":(60,110,220),
+"GREEN":(60,200,100),
+"YELLOW":(230,210,60),
+"PURPLE":(170,70,200)
 }
 
-# ვქმნით თამაშის ფანჯარას
-screen = pygame.display.set_mode((WIDTH, HEIGHT))
-
-# ვარქმევთ თამაშს სახელს
+screen=pygame.display.set_mode((WIDTH,HEIGHT))
 pygame.display.set_caption("Cube Catcher")
+clock=pygame.time.Clock()
 
-# საათი, რომელიც აკონტროლებს სიჩქარეს
-clock = pygame.time.Clock()
+font=pygame.font.SysFont(None,48)
+small_font=pygame.font.SysFont(None,30)
 
-# ტექსტის ზომა
-font = pygame.font.SysFont(None, 48)
+DATA_FILE="players.json"
 
+def load_players():
+    if os.path.exists(DATA_FILE):
+        with open(DATA_FILE,"r") as f:
+            return json.load(f)
+    return {}
+
+def save_players():
+    with open(DATA_FILE,"w") as f:
+        json.dump(players,f,indent=4)
+
+players=load_players()
+
+def get_day():
+    days=[
+        "Monday",
+        "Tuesday",
+        "Wednesday",
+        "Thursday",
+        "Friday",
+        "Saturday",
+        "Sunday"
+    ]
+    return days[datetime.datetime.today().weekday()]
+
+def create_player(name):
+    if name not in players:
+        players[name]={
+            "games":0,
+            "best_score":0,
+            "total_score":0,
+            "daily":{},
+            "weekly":{
+                "Monday":0,
+                "Tuesday":0,
+                "Wednesday":0,
+                "Thursday":0,
+                "Friday":0,
+                "Saturday":0,
+                "Sunday":0
+            }
+        }
+        save_players()
+    return players[name]
+
+def update_player(name,score):
+    player=players[name]
+    today=str(datetime.date.today())
+    day=get_day()
+
+    player["games"]+=1
+    player["total_score"]+=score
+
+    if score>player["best_score"]:
+        player["best_score"]=score
+
+    if today not in player["daily"]:
+        player["daily"][today]=0
+
+    if score>player["daily"][today]:
+        player["daily"][today]=score
+
+    if score>player["weekly"][day]:
+        player["weekly"][day]=score
+
+    save_players()
+
+def draw_text(text,x,y,size=48):
+    img=pygame.font.SysFont(None,size).render(
+        text,
+        True,
+        (255,255,255)
+    )
+    screen.blit(
+        img,
+        (x-img.get_width()//2,y)
+    )
 
 class Player:
-    # ეს მუშაობს მაშინ, როცა მოთამაშეს ვქმნით
     def __init__(self):
-        # მოთამაშის ზომა
-        self.width = 90
-        self.height = 30
-        # მოთამაშის საწყისი ადგილი
-        self.x = WIDTH / 2 - self.width / 2
-        self.y = HEIGHT - self.height - 20
-        # რამდენად სწრაფად მოძრაობს
-        self.speed = 400
-        # მოთამაშეს შემთხვევით ვაძლევთ ფერს
-        self.color = random.choice(list(COLORS.keys()))
+        self.width=90
+        self.height=30
+        self.x=WIDTH/2-self.width/2
+        self.y=HEIGHT-self.height-20
+        self.speed=400
+        self.color=random.choice(list(COLORS.keys()))
 
-    # მოთამაშის მოძრაობა
-    def move(self, dt):
-        # ვამოწმებთ რომელი ღილაკი არის დაჭერილი
-        keys = pygame.key.get_pressed()
-        # თუ A-ს დავაჭერთ, მარცხნივ წავა
+    def move(self,dt):
+        keys=pygame.key.get_pressed()
+
         if keys[pygame.K_a]:
-            self.x -= self.speed * dt
-        # თუ D-ს დავაჭერთ, მარჯვნივ წავა
+            self.x-=self.speed*dt
+
         if keys[pygame.K_d]:
-            self.x += self.speed * dt
-        # არ მივცეთ საშუალება ეკრანიდან გავიდეს
-        self.x = max(0, min(self.x, WIDTH - self.width))
-    # ქმნის მართკუთხედს შეჯახების შესამოწმებლად
+            self.x+=self.speed*dt
+
+        self.x=max(
+            0,
+            min(
+                self.x,
+                WIDTH-self.width
+            )
+        )
+
     def rect(self):
-        return pygame.Rect(int(self.x), int(self.y), self.width, self.height)
-    # ხატავს მოთამაშეს ეკრანზე
+        return pygame.Rect(
+            int(self.x),
+            int(self.y),
+            self.width,
+            self.height
+        )
+
     def draw(self):
-        pygame.draw.rect(screen, COLORS[self.color], self.rect())
-
-
+        pygame.draw.rect(
+            screen,
+            COLORS[self.color],
+            self.rect()
+        )
 
 class Cube:
-    # როცა ახალ კუბს ვქმნით
     def __init__(self):
-        # კუბის ზომა
-        self.size = 30
-        # შემთხვევითი ადგილი ზემოდან
-        self.x = random.randint(0, WIDTH - self.size)
-        # იწყებს ეკრანის ზემოდან
-        self.y = -self.size
-        # შემთხვევითი სიჩქარე
-        self.speed = random.randint(180, 300)
-        # კუბს ვაძლევთ შემთხვევით ფერს
-        self.color = random.choice(list(COLORS.keys()))
-    # კუბის ჩამოვარდნა
-    def fall(self, dt):
-        # კუბი ქვემოთ მოძრაობს
-        self.y += self.speed * dt
+        self.size=30
+        self.x=random.randint(0,WIDTH-self.size)
+        self.y=-self.size
+        self.speed=random.randint(180,300)
+        self.color=random.choice(list(COLORS.keys()))
 
-    # კუბის ადგილი შეჯახებისთვის
+    def fall(self,dt):
+        self.y+=self.speed*dt
+
     def rect(self):
-        return pygame.Rect(int(self.x), int(self.y), self.size, self.size)
+        return pygame.Rect(
+            int(self.x),
+            int(self.y),
+            self.size,
+            self.size
+        )
 
-
-    # კუბის დახატვა
     def draw(self):
-        pygame.draw.rect(screen, COLORS[self.color], self.rect())
+        pygame.draw.rect(
+            screen,
+            COLORS[self.color],
+            self.rect()
+        )
+
+
+def username_screen():
+    name=""
+    active=True
+
+    while active:
+        screen.fill(BG_COLOR)
+
+        draw_text(
+            "Enter Username",
+            WIDTH//2,
+            150
+        )
+
+        draw_text(
+            name+"_",
+            WIDTH//2,
+            240
+        )
+
+        draw_text(
+            "Press ENTER",
+            WIDTH//2,
+            340,
+            30
+        )
+        pygame.display.flip()
+
+        for event in pygame.event.get():
+
+            if event.type==pygame.QUIT:
+                pygame.quit()
+                sys.exit()
+
+            if event.type==pygame.KEYDOWN:
+
+                if event.key==pygame.K_RETURN:
+
+                    if name!="":
+                        active=False
+
+                elif event.key==pygame.K_BACKSPACE:
+                    name=name[:-1]
+
+                else:
+
+                    if len(name)<15:
+                        name+=event.unicode
+    return name
+
+
+def game_over_screen(name,score):
+
+    update_player(name,score)
+
+    data=players[name]
+
+    active=True
+
+    while active:
+
+        screen.fill(BG_COLOR)
+
+        draw_text(
+            "GAME OVER",
+            WIDTH//2,
+            70
+        )
+
+        draw_text(
+            "Player: "+name,
+            WIDTH//2,
+            140,
+            30
+        )
+
+        draw_text(
+            "Score: "+str(score),
+            WIDTH//2,
+            190,
+            30
+        )
+
+        draw_text(
+            "Best: "+str(data["best_score"]),
+            WIDTH//2,
+            240,
+            30
+        )
+
+        draw_text(
+            "Games: "+str(data["games"]),
+            WIDTH//2,
+            290,
+            30
+        )
+
+        draw_text(
+            "Today: "+get_day(),
+            WIDTH//2,
+            340,
+            30
+        )
+
+        draw_text(
+            "Press ENTER",
+            WIDTH//2,
+            450,
+            30
+        )
+
+        pygame.display.flip()
+
+
+        for event in pygame.event.get():
+
+            if event.type==pygame.QUIT:
+                active=False
+
+            if event.type==pygame.KEYDOWN:
+
+                if event.key==pygame.K_RETURN:
+                    active=False
 
 
 
-# ---------------- თამაშის მონაცემები ----------------
+player_name=username_screen()
 
-# ვქმნით მოთამაშეს
-player = Player()
+create_player(player_name)
 
-# აქ შევინახავთ ყველა კუბს
-cubes = []
-# tito cubes damatebaze emateba cube1 cube2 cube3 da ase shemdeg
-# ქულა თავიდან არის 0
-score = 0
+player=Player()
 
-# დრო, რომელიც ითვლის კუბების გამოჩენას
-spawn_timer = 0
+cubes=[]
 
-# რამდენ წამში გაჩნდება ახალი კუბი
-spawn_interval = random.uniform(0.5, 1.0)
+score=0
 
-# თამაში ჩართულია
-running = True
+spawn_timer=0
+
+spawn_interval=random.uniform(0.5,1.0)
+
+running=True
 
 
-
-# ---------------- მთავარი თამაშის ციკლი ----------------
-
-# სანამ თამაში მუშაობს
 while running:
 
-    # ვიგებთ რამდენი დრო გავიდა წინა კადრიდან
-    dt = clock.tick(FPS) / 1000
+    dt=clock.tick(FPS)/1000
 
 
-    # ვამოწმებთ მოვლენებს
     for event in pygame.event.get():
 
-        # თუ X ღილაკს დავაჭერთ, თამაში დაიხურება
-        if event.type == pygame.QUIT:
-            running = False
+        if event.type==pygame.QUIT:
+            running=False
 
 
-
-    # ვამოძრავებთ მოთამაშეს
     player.move(dt)
 
 
-
-    # -------- ახალი კუბების შექმნა --------
-
-    # დროს ვზრდით
-    spawn_timer += dt
+    spawn_timer+=dt
 
 
-    # თუ საკმარისი დრო გავიდა
-    if spawn_timer >= spawn_interval:
+    if spawn_timer>=spawn_interval:
 
-        # დროს თავიდან ვიწყებთ
-        spawn_timer = 0
+        spawn_timer=0
 
-        # შემდეგი კუბი როდის გაჩნდება
-        spawn_interval = random.uniform(0.5, 1.0)
+        spawn_interval=random.uniform(0.5,1.0)
 
-        # ვქმნით ახალ კუბს
         cubes.append(Cube())
 
 
-
-    # -------- კუბების მოძრაობა და შეჯახებები --------
-
-    # ვამოწმებთ ყველა კუბს
     for cube in cubes[:]:
 
-        # კუბი ჩამოდის ქვემოთ
         cube.fall(dt)
 
 
-        # თუ კუბი მოთამაშეს შეეხო
         if cube.rect().colliderect(player.rect()):
 
+            if cube.color==player.color:
 
-            # თუ ფერები ერთნაირია
-            if cube.color == player.color:
-
-                # კუბს ვშლით
                 cubes.remove(cube)
 
-                # ქულას ვამატებთ
-                score += 1
+                score+=1
 
-                # მოთამაშეს ახალი ფერი ეძლევა
-                player.color = random.choice(list(COLORS.keys()))
+                player.color=random.choice(
+                    list(COLORS.keys())
+                )
 
-
-            # თუ ფერები განსხვავებულია
             else:
 
-                # თამაში მთავრდება
-                running = False
-
+                running=False
 
             continue
 
 
+        if cube.y>HEIGHT:
 
-             # თუ კუბი ეკრანს გასცდა
-        if cube.y > HEIGHT:
+            if cube.color==player.color:
+                score-=1
 
-            # თუ ეს იყო ის ფერი, რომელიც უნდა დაგეჭირა
-            if cube.color == player.color:
-                score -= 1
-
-            # ვშლით
             cubes.remove(cube)
 
 
 
-    # -------- ხატვა --------
-
-    # ვასუფთავებთ ეკრანს
     screen.fill(BG_COLOR)
 
-
-    # ვხატავთ მოთამაშეს
     player.draw()
 
-
-    # ვხატავთ ყველა კუბს
     for cube in cubes:
         cube.draw()
 
 
+    draw_text(
+        str(score),
+        WIDTH//2,
+        20
+    )
 
-    # ვქმნით ქულის ტექსტს
-    score_text = font.render(str(score), True, (255, 255, 255))
+    draw_text(
+        "Player: "+player_name,
+        120,
+        20,
+        25
+    )
 
 
-    # ვაჩვენებთ ქულას ეკრანზე
-    screen.blit(score_text, score_text.get_rect(center=(WIDTH // 2, 40)))
-
-
-    # ეკრანს ვაახლებთ
     pygame.display.flip()
 
 
 
-# თამაშის დახურვა
-pygame.quit()
+game_over_screen(
+    player_name,
+    score
+)
 
-# პროგრამის დასრულება
+
+pygame.quit()
 sys.exit()

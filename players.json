@@ -1,0 +1,53 @@
+{
+    "nikusha": {
+        "games": 2,
+        "best_score": 1,
+        "total_score": 0,
+        "daily": {
+            "2026-08-05": 1
+        },
+        "weekly": {
+            "Monday": 0,
+            "Tuesday": 0,
+            "Wednesday": 1,
+            "Thursday": 0,
+            "Friday": 0,
+            "Saturday": 0,
+            "Sunday": 0
+        }
+    },
+    "roger": {
+        "games": 1,
+        "best_score": 0,
+        "total_score": 0,
+        "daily": {
+            "2026-08-05": 0
+        },
+        "weekly": {
+            "Monday": 0,
+            "Tuesday": 0,
+            "Wednesday": 0,
+            "Thursday": 0,
+            "Friday": 0,
+            "Saturday": 0,
+            "Sunday": 0
+        }
+    },
+    "vasili": {
+        "games": 1,
+        "best_score": 0,
+        "total_score": 0,
+        "daily": {
+            "2026-08-05": 0
+        },
+        "weekly": {
+            "Monday": 0,
+            "Tuesday": 0,
+            "Wednesday": 0,
+            "Thursday": 0,
+            "Friday": 0,
+            "Saturday": 0,
+            "Sunday": 0
+        }
+    }
+}

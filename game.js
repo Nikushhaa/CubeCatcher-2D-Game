@@ -1,5 +1,3 @@
-
-
 const COLORS = {
   RED: "#dc3c3c",
   BLUE: "#3c6edc",
@@ -8,92 +6,195 @@ const COLORS = {
   PURPLE: "#aa46c8",
 };
 const COLOR_NAMES = Object.keys(COLORS);
-
-function randomColorName() {
-  return COLOR_NAMES[Math.floor(Math.random() * COLOR_NAMES.length)];
+function getToday() {
+  return new Date().toISOString().split("T")[0];
 }
-
+function getDayName() {
+  const days = [
+    "Sunday",
+    "Monday",
+    "Tuesday",
+    "Wednesday",
+    "Thursday",
+    "Friday",
+    "Saturday"
+  ];
+  return days[new Date().getDay()];
+}
+function loadPlayer() {
+  let username = localStorage.getItem("cubeCatcher_username");
+  if (!username) {
+    username = prompt("Enter your username:");
+    if (!username || username.trim() === "") {
+      username = "Guest";
+    }
+    localStorage.setItem(
+      "cubeCatcher_username",
+      username
+    );
+  }
+  let data = localStorage.getItem(
+    "cubeCatcher_" + username
+  );
+  if (!data) {
+    data = {
+      username: username,
+      gamesPlayed: 0,
+      bestScore: 0,
+      totalScore: 0,
+      daily: {},
+      weekly: {
+        Monday: 0,
+        Tuesday: 0,
+        Wednesday: 0,
+        Thursday: 0,
+        Friday: 0,
+        Saturday: 0,
+        Sunday: 0
+      }
+    };
+  } else {
+    data = JSON.parse(data);
+  }
+  return data;
+}
+function savePlayer(playerData) {
+  localStorage.setItem(
+    "cubeCatcher_" + playerData.username,
+    JSON.stringify(playerData)
+  );
+}
+function updateStats(playerData, score) {
+  const today = getToday();
+  const day = getDayName();
+  playerData.gamesPlayed += 1;
+  playerData.totalScore += score;
+  if (score > playerData.bestScore) {
+    playerData.bestScore = score;
+  }
+  if (!playerData.daily[today]) {
+    playerData.daily[today] = 0;
+  }
+  if (score > playerData.daily[today]) {
+    playerData.daily[today] = score;
+  }
+  if (score > playerData.weekly[day]) {
+    playerData.weekly[day] = score;
+  }
+  savePlayer(playerData);
+}
+function randomColorName() {
+  return COLOR_NAMES[
+    Math.floor(Math.random() * COLOR_NAMES.length)
+  ];
+}
 function randomRange(min, max) {
   return Math.random() * (max - min) + min;
 }
-
 class Player {
   constructor(canvasWidth, canvasHeight) {
     this.width = 90;
     this.height = 30;
     this.canvasWidth = canvasWidth;
     this.canvasHeight = canvasHeight;
-
-    
-    this.x = canvasWidth / 2 - this.width / 2;// gacentrili
-    this.y = canvasHeight - this.height - 20;//vertikalurad
-
-    this.speed = 500; 
-
-    
-    this.colorName = randomColorName();
+    this.x =
+      canvasWidth / 2 - this.width / 2;
+    this.y =
+      canvasHeight - this.height - 20;
+    this.speed = 500;
+    this.colorName =
+      randomColorName();
   }
-
   resize(canvasWidth, canvasHeight) {
     this.canvasWidth = canvasWidth;
     this.canvasHeight = canvasHeight;
-    this.y = canvasHeight - this.height - 20;
-    this.x = Math.max(0, Math.min(this.x, canvasWidth - this.width));//ekrans iqit rom ver gavides motamashe
+    this.y =
+      canvasHeight - this.height - 20;
+    this.x =
+      Math.max(
+        0,
+        Math.min(
+          this.x,
+          canvasWidth - this.width
+        )
+      );
   }
-
-  
   handleInput(dt, keys) {
-    if (keys.left) this.x -= this.speed * dt;
-    if (keys.right) this.x += this.speed * dt;
-
-    // Keep the catcher inside the canvas bounds
-    this.x = Math.max(0, Math.min(this.x, this.canvasWidth - this.width));
+    if (keys.left)
+      this.x -= this.speed * dt;
+    if (keys.right)
+      this.x += this.speed * dt;
+    this.x =
+      Math.max(
+        0,
+        Math.min(
+          this.x,
+          this.canvasWidth - this.width
+        )
+      );
   }
-
   changeColor() {
     this.colorName = randomColorName();
   }
-
   getRect() {
-    return { x: this.x, y: this.y, width: this.width, height: this.height };
+    return {
+      x:this.x,
+      y:this.y,
+      width:this.width,
+      height:this.height
+    };
   }
-
   draw(ctx) {
-    ctx.fillStyle = COLORS[this.colorName];
-    ctx.fillRect(this.x, this.y, this.width, this.height);
+    ctx.fillStyle =
+      COLORS[this.colorName];
+    ctx.fillRect(
+      this.x,
+      this.y,
+      this.width,
+      this.height
+    );
   }
 }
-
-
 class FallingCube {
   constructor(canvasWidth) {
     this.size = 30;
-    this.x = randomRange(0, canvasWidth - this.size);// shemtxveviti koordinati 
-    this.y = -this.size; //  kubi iwyebs ekranis zeda mxridan
-
-    this.speed = randomRange(180, 320);//  kubis random sichqare
-    this.colorName = randomColorName();
+    this.x =
+      randomRange(
+        0,
+        canvasWidth - this.size
+      );
+    this.y = -this.size;
+    this.speed =
+      randomRange(180,320);
+    this.colorName =
+      randomColorName();
   }
-
   update(dt) {
-    this.y += this.speed * dt;// delta time aris dt ramdeni wami gavida kadridan kadramde
+    this.y += this.speed * dt;
   }
-
-  isOffScreen(canvasHeight) {// mowmdeba gavida tuara kubi ekrans garet
+  isOffScreen(canvasHeight) {
     return this.y > canvasHeight;
   }
-
   getRect() {
-    return { x: this.x, y: this.y, width: this.size, height: this.size };
+    return {
+      x:this.x,
+      y:this.y,
+      width:this.size,
+      height:this.size
+    };
   }
-
   draw(ctx) {
-    ctx.fillStyle = COLORS[this.colorName];
-    ctx.fillRect(this.x, this.y, this.size, this.size);
+    ctx.fillStyle =
+      COLORS[this.colorName];
+    ctx.fillRect(
+      this.x,
+      this.y,
+      this.size,
+      this.size
+    );
   }
 }
-// amowmebs exeba tu ara ertmanets
-function rectsOverlap(a, b) {
+function rectsOverlap(a,b){
   return (
     a.x < b.x + b.width &&
     a.x + a.width > b.x &&
@@ -101,135 +202,205 @@ function rectsOverlap(a, b) {
     a.y + a.height > b.y
   );
 }
-
 class Game {
-  constructor(canvas) {
+  constructor(canvas){
     this.canvas = canvas;
-    this.ctx = canvas.getContext("2d");
-    this.resizeCanvas();// canvas adzlevs swor zomas 
-
-    this.player = new Player(this.width, this.height);// iqmneba motamashe 
-    this.cubes = [];// carieli masivi kubebistvis roca kubi chndeba emateba cube1 cube2
-    this.score = 0;// qula 0 dan iwyeba da +1 emateba this score++ meshveobit
-
-    
+    this.ctx =
+      canvas.getContext("2d");
+    this.resizeCanvas();
+    this.player =
+      new Player(
+        this.width,
+        this.height
+      );
+    this.cubes = [];
+    this.score = 0;
+    this.playerData =
+      loadPlayer();
     this.spawnTimer = 0;
-    this.spawnInterval = randomRange(0.5, 1.0);
-
-    
-    this.keys = { left: false, right: false };// klaviaturis mdgomareobas inaxavs right // left is saxit
-
+    this.spawnInterval =
+      randomRange(0.5,1.0);
+    this.keys = {
+      left:false,
+      right:false
+    };
     this.running = true;
     this.lastTime = null;
-
     this.bindEvents();
-    requestAnimationFrame((t) => this.loop(t));// yvela frame ze gamoidzaxebs loops
+    requestAnimationFrame(
+      (t)=>this.loop(t)
+    );
   }
-// fanjris zomas akopirebs canvasze
-  resizeCanvas() {  
-    this.canvas.width = window.innerWidth;
-    this.canvas.height = window.innerHeight;
-    this.width = this.canvas.width;
-    this.height = this.canvas.height;
+  resizeCanvas(){
+    this.canvas.width =
+      window.innerWidth;
+    this.canvas.height =
+      window.innerHeight;
+    this.width =
+      this.canvas.width;
+    this.height =
+      this.canvas.height;
   }
-
-  bindEvents() {
-    window.addEventListener("keydown", (e) => {
-      if (e.key === "a" || e.key === "A") this.keys.left = true; //rodesac a s daacher mashin wava marcxniv 
-      if (e.key === "d" || e.key === "D") this.keys.right = true;// rodesac D daacher wava marjvniv
-    });
-    window.addEventListener("keyup", (e) => { //rodesac klaviaturas ar acher ar imodzravebs motamashe
-      if (e.key === "a" || e.key === "A") this.keys.left = false;
-      if (e.key === "d" || e.key === "D") this.keys.right = false;
-    });
-    window.addEventListener("resize", () => {
-      this.resizeCanvas();
-      this.player.resize(this.width, this.height);
-    });
+  endGame(){
+    this.running = false;
+    updateStats(
+      this.playerData,
+      this.score
+    );
+    alert(
+      "Game Over\n\n" +
+      "Player: " +
+      this.playerData.username +
+      "\nScore: " +
+      this.score +
+      "\nBest Score: " +
+      this.playerData.bestScore
+    );
   }
-
-  loop(timestamp) {
-    if (!this.running) return; // roca araswor kubs ejaxeba cherdeba
-
-    if (this.lastTime === null) this.lastTime = timestamp;
-    const dt = (timestamp - this.lastTime) / 1000; 
-    this.lastTime = timestamp;
-
+  bindEvents(){
+    window.addEventListener(
+      "keydown",
+      (e)=>{
+        if(e.key==="a" || e.key==="A")
+          this.keys.left=true;
+        if(e.key==="d" || e.key==="D")
+          this.keys.right=true;
+      }
+    );
+    window.addEventListener(
+      "keyup",
+      (e)=>{
+        if(e.key==="a" || e.key==="A")
+          this.keys.left=false;
+        if(e.key==="d" || e.key==="D")
+          this.keys.right=false;
+      }
+    );
+    window.addEventListener(
+      "resize",
+      ()=>{
+        this.resizeCanvas();
+        this.player.resize(
+          this.width,
+          this.height
+        );
+      }
+    );
+  }
+  loop(timestamp){
+    if(!this.running)
+      return;
+    if(this.lastTime===null)
+      this.lastTime=timestamp;
+    const dt =
+      (timestamp-this.lastTime)/1000;
+    this.lastTime=timestamp;
     this.update(dt);
     this.draw();
-
-    requestAnimationFrame((t) => this.loop(t));
+    requestAnimationFrame(
+      (t)=>this.loop(t)
+    );
   }
-
-  update(dt) {
-    this.player.handleInput(dt, this.keys);
+  update(dt){
+    this.player.handleInput(
+      dt,
+      this.keys
+    );
     this.spawnCubes(dt);
     this.updateCubes(dt);
   }
-
-  
-  spawnCubes(dt) {
+  spawnCubes(dt){
     this.spawnTimer += dt;
-    if (this.spawnTimer >= this.spawnInterval) {
-      this.spawnTimer = 0;
-      this.spawnInterval = randomRange(0.5, 1.0);
-      this.cubes.push(new FallingCube(this.width));
+    if(this.spawnTimer >= this.spawnInterval){
+      this.spawnTimer=0;
+      this.spawnInterval =
+        randomRange(0.5,1.0);
+      this.cubes.push(
+        new FallingCube(
+          this.width
+        )
+      );
     }
   }
+  updateCubes(dt){
 
-  updateCubes(dt) {
-    const playerRect = this.player.getRect();
-
-    for (let i = this.cubes.length - 1; i >= 0; i--) {
-      const cube = this.cubes[i];
+    const playerRect =
+      this.player.getRect();
+    for(
+      let i=this.cubes.length-1;
+      i>=0;
+      i--
+    ){
+      const cube =
+        this.cubes[i];
       cube.update(dt);
-
-      if (rectsOverlap(cube.getRect(), playerRect)) {
-        if (cube.colorName === this.player.colorName) {
-          
-          this.cubes.splice(i, 1);
-          this.score += 1;
+      if(
+        rectsOverlap(
+          cube.getRect(),
+          playerRect
+        )
+      ){
+        if(
+          cube.colorName ===
+          this.player.colorName
+        ){
+          this.cubes.splice(i,1);
+          this.score++;
           this.player.changeColor();
-        } else {
-      
-          this.running = false;
+        }
+        else{
+          this.endGame();
           return;
         }
         continue;
       }
-
- 
-      if (cube.isOffScreen(this.height)) {
-        this.cubes.splice(i, 1);   // ramdeni elementi unda washalos imas tvlis
+      if(
+        cube.isOffScreen(
+          this.height
+        )
+      ){
+        this.cubes.splice(i,1);
       }
     }
   }
+  draw(){
+    const ctx=this.ctx;
+    ctx.fillStyle="#141414";
 
-  draw() {
-    const ctx = this.ctx;
-
-    // Dark background
-    ctx.fillStyle = "#141414";
-    ctx.fillRect(0, 0, this.width, this.height);
-
+    ctx.fillRect(
+      0,
+      0,
+      this.width,
+      this.height
+    );
     this.player.draw(ctx);
-    for (const cube of this.cubes) cube.draw(ctx);
-
+    for(
+      const cube of this.cubes
+    )
+      cube.draw(ctx);
     this.drawScore(ctx);
   }
+  drawScore(ctx){
+    ctx.fillStyle="#ffffff";
+    ctx.font =
+      "40px sans-serif";
+    ctx.textAlign="center";
+    ctx.textBaseline="top";
+    ctx.fillText(
+      String(this.score),
+      this.width/2,
+      20
+    );
 
-  
-  drawScore(ctx) {
-    ctx.fillStyle = "#ffffff";
-    ctx.font = "40px sans-serif";
-    ctx.textAlign = "center";
-    ctx.textBaseline = "top";
-    ctx.fillText(String(this.score), this.width / 2, 20);
   }
 }
-
-// Start the game once the page has loaded
-window.addEventListener("load", () => {
-  const canvas = document.getElementById("gameCanvas");
-  new Game(canvas);
-});
+window.addEventListener(
+  "load",
+  ()=>{
+    const canvas =
+      document.getElementById(
+        "gameCanvas"
+      );
+    new Game(canvas);
+  }
+);
