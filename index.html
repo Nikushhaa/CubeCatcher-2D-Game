@@ -2,11 +2,95 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <title>Cube Catcher</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Space Shooter</title>
   <link rel="stylesheet" href="style.css" />
 </head>
 <body>
   <canvas id="gameCanvas"></canvas>
+
+  <!-- LOGIN -->
+  <div id="loginScreen" class="overlay">
+    <div class="panel panel-narrow">
+      <div class="eyebrow">Identify yourself</div>
+      <h1 class="panel-title">SPACE SHOOTER</h1>
+      <p class="panel-sub">Sign in to save your stats and ship loadout. New name? An account is created for you.</p>
+
+      <form id="loginForm" class="stack">
+        <label class="field">
+          <span>Callsign</span>
+          <input id="loginUsername" type="text" maxlength="18" autocomplete="username" required />
+        </label>
+        <label class="field">
+          <span>Access code</span>
+          <input id="loginPassword" type="password" maxlength="64" autocomplete="current-password" required />
+        </label>
+        <div id="loginError" class="error-text" role="alert"></div>
+        <button type="submit" class="btn btn-primary">Enter the Fleet</button>
+      </form>
+      <p class="fine-print">Stored on this device only, in this browser. Clearing browser data erases it.</p>
+    </div>
+  </div>
+
+  <!-- MAIN MENU -->
+  <div id="mainMenu" class="overlay hidden">
+    <div class="panel">
+      <div class="eyebrow" id="menuWelcome">Welcome</div>
+      <h1 class="panel-title">MISSION CONTROL</h1>
+      <div class="stack menu-stack">
+        <button id="btnPlay" class="btn btn-primary btn-large">Launch Mission</button>
+        <button id="btnShips" class="btn btn-secondary">Hangar &mdash; Choose Ship</button>
+        <button id="btnStats" class="btn btn-secondary">Pilot Record</button>
+        <button id="btnLogout" class="btn btn-ghost">Sign Out</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- SHIP SELECT -->
+  <div id="shipSelect" class="overlay hidden">
+    <div class="panel panel-wide">
+      <div class="eyebrow">Hangar</div>
+      <h1 class="panel-title">CHOOSE YOUR SHIP</h1>
+      <div id="shipList" class="ship-grid"></div>
+      <button id="btnShipBack" class="btn btn-ghost">Back to Mission Control</button>
+    </div>
+  </div>
+
+  <!-- STATS -->
+  <div id="statsScreen" class="overlay hidden">
+    <div class="panel panel-narrow">
+      <div class="eyebrow">Permanent record</div>
+      <h1 class="panel-title">PILOT RECORD</h1>
+      <div id="statsBody" class="stat-list"></div>
+      <button id="btnStatsBack" class="btn btn-ghost">Back to Mission Control</button>
+    </div>
+  </div>
+
+  <!-- GAME OVER -->
+  <div id="gameOverScreen" class="overlay hidden">
+    <div class="panel panel-narrow">
+      <div class="eyebrow">Mission ended</div>
+      <h1 class="panel-title">GAME OVER</h1>
+      <div class="stat-list">
+        <div class="stat-row"><span>Score</span><span id="goScore">0</span></div>
+        <div class="stat-row"><span>Best Score</span><span id="goBest">0</span></div>
+      </div>
+      <div class="stack">
+        <button id="btnGoRestart" class="btn btn-primary">Restart</button>
+        <button id="btnGoMenu" class="btn btn-secondary">Go to Menu</button>
+        <button id="btnGoExit" class="btn btn-ghost">Exit</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- EXIT FALLBACK (shown if the browser won't let the page close itself) -->
+  <div id="exitScreen" class="overlay hidden">
+    <div class="panel panel-narrow">
+      <h1 class="panel-title">SEE YOU, PILOT</h1>
+      <p class="panel-sub">Your browser won't let a page close its own tab. You can close this tab now.</p>
+    </div>
+  </div>
+
   <script src="game.js"></script>
 </body>
 </html>
